@@ -14,7 +14,7 @@ import torch.optim as optim
 import torch.utils.data as data
 import transforms
 import torchvision.datasets as datasets
-import models.cifar as models
+import models.mnist as models
 
 from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
 
@@ -22,14 +22,14 @@ from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
-
+D=2
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 and 100 Training')
 # Datasets
 parser.add_argument('-d', '--dataset', default='cifar10', type=str)
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 # Optimization options
-parser.add_argument('--epochs', default=300, type=int, metavar='N',
+parser.add_argument('--epochs', default=D*20, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -41,7 +41,7 @@ parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--drop', '--dropout', default=0, type=float,
                     metavar='Dropout', help='Dropout ratio')
-parser.add_argument('--schedule', type=int, nargs='+', default=[150, 225],
+parser.add_argument('--schedule', type=int, nargs='+', default=[D*10, D*15],
                         help='Decrease learning rate at these epochs.')
 parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -78,8 +78,7 @@ args = parser.parse_args()
 state = {k: v for k, v in args._get_kwargs()}
 
 # Validate dataset
-assert args.dataset == 'cifar10' or args.dataset == 'cifar100', 'Dataset can only be cifar10 or cifar100.'
-
+assert args.dataset == 'mnist' 
 # Use CUDA
 use_cuda = torch.cuda.is_available()
 
@@ -105,23 +104,18 @@ def main():
     # Data
     print('==> Preparing dataset %s' % args.dataset)
     transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
+        transforms.RandomCrop(28, padding=2),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        transforms.RandomErasing(probability = args.p, sh = args.sh, r1 = args.r1, img2=False),
+        transforms.RandomErasing(probability = args.p, sh = args.sh, r1 = args.r1, img2=None),
     ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
-    if args.dataset == 'cifar10':
-        dataloader = datasets.CIFAR10
+    if args.dataset == 'mnist':
+        dataloader = datasets.MNIST
         num_classes = 10
-    else:
-        dataloader = datasets.CIFAR100
-        num_classes = 100
 
 
     trainset = dataloader(root='./data', train=True, download=True, transform=transform_train)
@@ -130,7 +124,6 @@ def main():
 
     testset = dataloader(root='./data', train=False, download=False, transform=transform_test)
     if args.n is not None: testset = transforms.Subset(testset, args.n)
-
     testloader = data.DataLoader(testset, batch_size=args.test_batch, shuffle=False, num_workers=args.workers)
 
     # Model   
