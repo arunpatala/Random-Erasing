@@ -22,7 +22,7 @@ from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
-D=2
+D=4
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 and 100 Training')
 # Datasets
 parser.add_argument('-d', '--dataset', default='cifar10', type=str)
@@ -152,7 +152,7 @@ def main():
     title = 'cifar-10-' + args.arch
     if args.resume:
         # Load checkpoint.
-        print('==> Resuming from checkpoint..')
+        print('==> Resuming from checkpoint..', args.resume)
         assert os.path.isfile(args.resume), 'Error: no checkpoint directory found!'
         args.checkpoint = os.path.dirname(args.resume)
         checkpoint = torch.load(args.resume)
@@ -160,9 +160,9 @@ def main():
         start_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-        logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title, resume=True)
+        logger = Logger(os.path.join(args.checkpoint, 'log.{}.n_{}.p_{}.sh_{}.txt'.format(args.dataset, args.n, args.p, args.sh)), title=title, resume=True)
     else:
-        logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title)
+        logger = Logger(os.path.join(args.checkpoint, 'log.{}.n_{}.p_{}.sh_{}.txt'.format(args.dataset, args.n, args.p, args.sh)), title=title)
         logger.set_names(['Learning Rate', 'Train Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.'])
 
 
